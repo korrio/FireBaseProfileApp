@@ -1,9 +1,9 @@
 package com.example.jamal.firebaseprofileapp;
 
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
-import android.view.View;
+import android.preference.PreferenceManager;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
@@ -36,6 +36,12 @@ public class UserHome extends AppCompatActivity
     }
 
     @Override
+    protected void onResume() {
+        super.onResume();
+        checkSharedPreferences();
+    }
+
+    @Override
     public void onBackPressed() {
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         if (drawer.isDrawerOpen(GravityCompat.START)) {
@@ -62,6 +68,8 @@ public class UserHome extends AppCompatActivity
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
             Toast.makeText(UserHome.this,"You will be redirected to shared preference screen",Toast.LENGTH_SHORT).show();
+            Intent intent = new Intent(UserHome.this,MyPreferenceActivity.class);
+            startActivity(intent);
             return true;
         }
 
@@ -83,5 +91,19 @@ public class UserHome extends AppCompatActivity
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
+    }
+    public void checkSharedPreferences()
+    {
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(UserHome.this);
+        boolean isUpdatesEnabled = sharedPreferences.getBoolean("updates",true);
+        boolean isBugReportEnabled = sharedPreferences.getBoolean("bugreport",true);
+        if(isUpdatesEnabled)
+        {
+            Toast.makeText(UserHome.this,"Updates are enabled for this application",Toast.LENGTH_SHORT).show();
+        }
+        if(isBugReportEnabled)
+        {
+            Toast.makeText(UserHome.this,"Bug reports are enabled for this application",Toast.LENGTH_SHORT).show();
+        }
     }
 }

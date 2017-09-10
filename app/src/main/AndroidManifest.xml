@@ -31,6 +31,13 @@
 
 
         </activity>
+        <activity
+            android:name=".MyPreferenceActivity"
+            android:label="MyPreferenceActivity"
+            android:theme="@style/AppTheme.NoActionBar">
+
+
+        </activity>
     </application>
 
 </manifest>
