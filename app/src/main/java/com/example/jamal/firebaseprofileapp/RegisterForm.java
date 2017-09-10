@@ -13,6 +13,7 @@ import android.widget.Spinner;
 
 public class RegisterForm extends AppCompatActivity {
     private Spinner mCountries;
+    private Spinner mGender;
     private Button mSaveProfile;
     private View.OnClickListener mSaveProfList = new View.OnClickListener() {
         @Override
@@ -34,6 +35,7 @@ public class RegisterForm extends AppCompatActivity {
     private void Init()
     {
         mCountries = (Spinner) findViewById(R.id.spnrCountries);
+        mGender = (Spinner) findViewById(R.id.spnrGender);
         mSaveProfile = (Button) findViewById(R.id.btnSaveProf);
 
     }
@@ -41,11 +43,15 @@ public class RegisterForm extends AppCompatActivity {
     {
         mSaveProfile.setOnClickListener(mSaveProfList);
     }
+
     private void InitSpinner()
     {
         String[] countries = {"Pakistan","USA","Afghanistan","United Kingdom"};
-        ArrayAdapter<String> spinnerAdapter = new ArrayAdapter<String>(RegisterForm.this,R.layout.support_simple_spinner_dropdown_item,countries);
-        mCountries.setAdapter(spinnerAdapter);
+        ArrayAdapter<String> countriesAdapter = new ArrayAdapter<String>(RegisterForm.this,R.layout.spinner_item,countries);
+        mCountries.setAdapter(countriesAdapter);
+        String[] gender = {"Male","Female"};
+        ArrayAdapter<String> genderAdapter =new ArrayAdapter<String>(RegisterForm.this,R.layout.spinner_item,gender);
+        mGender.setAdapter(genderAdapter);
 
     }
 }
