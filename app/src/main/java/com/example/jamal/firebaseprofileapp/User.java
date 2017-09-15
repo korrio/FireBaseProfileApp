@@ -1,9 +1,12 @@
 package com.example.jamal.firebaseprofileapp;
 
+import org.parceler.Parcel;
+
 /**
  * Created by Jamal on 9/14/2017.
  */
 
+@Parcel
 public class User {
     private String mUserName;
     private String mEmailAddress;

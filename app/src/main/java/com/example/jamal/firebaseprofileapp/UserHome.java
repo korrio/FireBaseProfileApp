@@ -12,10 +12,20 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
+
+import org.parceler.Parcels;
 
 public class UserHome extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
+    private TextView mUserFullName;
+    private TextView mUserEmailAddrs;
+    private ImageView mProfileImage;
+    private NavigationView mNavigationView;
+    private UserProfile mUserProfile;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -24,6 +34,7 @@ public class UserHome extends AppCompatActivity
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         toolbar.setTitle("User Home Screen");
         setSupportActionBar(toolbar);
+        init();
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
@@ -105,5 +116,19 @@ public class UserHome extends AppCompatActivity
         {
             Toast.makeText(UserHome.this,"Bug reports are enabled for this application",Toast.LENGTH_SHORT).show();
         }
+    }
+    private void init()
+    {
+        mNavigationView = (NavigationView) findViewById(R.id.nav_view);
+        View hView = mNavigationView.getHeaderView(0);
+        mUserFullName = hView.findViewById(R.id.txtFullName);
+        mUserEmailAddrs = hView.findViewById(R.id.txtEmailAddrs);
+        mProfileImage = hView.findViewById(R.id.imgProf);
+        mUserProfile = Parcels.unwrap(getIntent().getParcelableExtra("userProfileObj"));
+        mUserFullName.setText(mUserProfile.getFirstName()+" "+mUserProfile.getLastName());
+        mUserEmailAddrs.setText(mUserProfile.getEmailAddress());
+        //profile image will be set later
+
+
     }
 }

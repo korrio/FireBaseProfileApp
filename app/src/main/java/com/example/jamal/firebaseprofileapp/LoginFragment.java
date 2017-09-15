@@ -2,6 +2,7 @@ package com.example.jamal.firebaseprofileapp;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Parcelable;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.util.Log;
@@ -17,6 +18,8 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+
+import org.parceler.Parcels;
 
 /**
  * Created by Jamal on 9/9/2017.
@@ -57,8 +60,11 @@ public class LoginFragment extends Fragment {
                                     //redirect to profile screen
                                     //user object will be sent to the profile screen where it will be used
                                     //to populate some fields inside form
+                                    Parcelable wrapped = Parcels.wrap(user);
                                     Intent registerForm = new Intent(getContext(),RegisterForm.class);
-                                    startActivity(registerForm);
+                                    Bundle bundle = new Bundle();
+                                    bundle.putParcelable("userObj",wrapped);
+                                    startActivity(registerForm,bundle);
                                 }
 
                         }else{
