@@ -64,7 +64,8 @@ public class LoginFragment extends Fragment {
                                     Intent registerForm = new Intent(getContext(),RegisterForm.class);
                                     Bundle bundle = new Bundle();
                                     bundle.putParcelable("userObj",wrapped);
-                                    startActivity(registerForm,bundle);
+                                    registerForm.putExtras(bundle);
+                                    startActivity(registerForm);
                                 }
 
                         }else{

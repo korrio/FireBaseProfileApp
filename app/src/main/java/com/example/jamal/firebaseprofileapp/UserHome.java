@@ -10,6 +10,7 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -124,11 +125,10 @@ public class UserHome extends AppCompatActivity
         mUserFullName = hView.findViewById(R.id.txtFullName);
         mUserEmailAddrs = hView.findViewById(R.id.txtEmailAddrs);
         mProfileImage = hView.findViewById(R.id.imgProf);
-        mUserProfile = Parcels.unwrap(getIntent().getParcelableExtra("userProfileObj"));
+        mUserProfile = Parcels.unwrap(getIntent().getExtras().getParcelable("userProfile"));
+        Log.d("UserHome", "init: "+Parcels.unwrap(getIntent().getExtras().getParcelable("userProfile")).toString());
         mUserFullName.setText(mUserProfile.getFirstName()+" "+mUserProfile.getLastName());
         mUserEmailAddrs.setText(mUserProfile.getEmailAddress());
-        //profile image will be set later
-
-
+            //profile image will be set later
     }
 }

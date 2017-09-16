@@ -1,9 +1,11 @@
 package com.example.jamal.firebaseprofileapp;
 
+import org.parceler.Parcel;
+
 /**
  * Created by Jamal on 9/15/2017.
  */
-
+@Parcel
 public class UserProfile {
     private String mUserName;
     private String mFirstName;
@@ -12,6 +14,16 @@ public class UserProfile {
     private String mCountry;
     private String mBiography;
     private String mInterests;
+    private boolean mIsActive;
+
+    public boolean isActive() {
+        return mIsActive;
+    }
+
+    public void setActive(boolean active) {
+        mIsActive = active;
+    }
+
 
     public String getUserName() {
         return mUserName;
@@ -101,5 +113,20 @@ public class UserProfile {
         mPhoneNum = phoneNu;
     }
 
-
+    @Override
+    public String toString() {
+        return "UserProfile{" +
+                "mUserName='" + mUserName + '\'' +
+                ", mFirstName='" + mFirstName + '\'' +
+                ", mLastName='" + mLastName + '\'' +
+                ", mGender='" + mGender + '\'' +
+                ", mCountry='" + mCountry + '\'' +
+                ", mBiography='" + mBiography + '\'' +
+                ", mInterests='" + mInterests + '\'' +
+                ", mIsActive=" + mIsActive +
+                ", mPhoneNum='" + mPhoneNum + '\'' +
+                ", mEmailAddress='" + mEmailAddress + '\'' +
+                ", mImageUrl='" + mImageUrl + '\'' +
+                '}';
+    }
 }

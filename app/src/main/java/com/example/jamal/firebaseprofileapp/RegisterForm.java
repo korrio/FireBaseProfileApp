@@ -1,11 +1,8 @@
 package com.example.jamal.firebaseprofileapp;
 
-import android.content.Intent;
 import android.os.Bundle;
-import android.os.Parcelable;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
@@ -13,11 +10,9 @@ import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.Toast;
 
-import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ValueEventListener;
 
 import org.parceler.Parcels;
 
@@ -33,49 +28,22 @@ public class RegisterForm extends AppCompatActivity {
     private User mUser;
     private DatabaseReference mDatabaseReference = FirebaseDatabase.getInstance().getReference();
 
+
+
     private View.OnClickListener mSaveProfList = new View.OnClickListener() {
         @Override
         public void onClick(View view) {
-            if (checkFields())
+            if(checkFields())
             {
-                mDatabaseReference.addValueEventListener(new ValueEventListener() {
+                mDatabaseReference.child("Users").child(mUser.getUserName().toLowerCase()).child("active").setValue(true, new DatabaseReference.CompletionListener() {
                     @Override
-                    public void onDataChange(DataSnapshot dataSnapshot) {
-                        Log.d("RegisterFrag", "onDataChange: "+dataSnapshot.child("Users").hasChild(mUser.getUserName().toLowerCase()));
-                        if(!dataSnapshot.child("UsersProfiles").hasChild(mUser.getUserName().toLowerCase()))
-                        {
-                            //add user here
-                            UserProfile userProfile = getUserProfile();
-                            mDatabaseReference.child("UsersProfiles").child(mUser.getUserName()).setValue(userProfile);
-                            changeUserStatus(mUser.getUserName(),true); //make user active
-                            Toast.makeText(RegisterForm.this,"User profile has been added you will be redirected to the home page",Toast.LENGTH_SHORT).show();
-                            //change the active status of the user
-                            //send user to the home screen
-                            Parcelable wrapped = Parcels.wrap(userProfile);
-                            Intent userHome = new Intent(RegisterForm.this,UserHome.class);
-                            Bundle bundle = new Bundle();
-                            bundle.putParcelable("userProfileObj",wrapped);
-                            startActivity(userHome,bundle);
-
-                        }else{
-                            Toast.makeText(RegisterForm.this,"Sorry user profile already  exists",Toast.LENGTH_SHORT).show();
-                        }
-                    }
-
-                    @Override
-                    public void onCancelled(DatabaseError databaseError) {
+                    public void onComplete(DatabaseError databaseError, DatabaseReference databaseReference) {
+                        Toast.makeText(RegisterForm.this,"Da moor agha kuss di",Toast.LENGTH_SHORT).show();
 
                     }
                 });
 
-
-            }else{
-                Toast.makeText(RegisterForm.this,"Please enter all the fields",Toast.LENGTH_SHORT).show();
             }
-
-
-            Intent userHome = new Intent(RegisterForm.this,UserHome.class);
-            startActivity(userHome);
 
         }
     };
@@ -84,6 +52,7 @@ public class RegisterForm extends AppCompatActivity {
     private UserProfile getUserProfile() {
         UserProfile userProfile = new UserProfile();
         userProfile.setUserName(mUser.getUserName());
+        userProfile.setActive(true);
         userProfile.setFirstName(mFirstName.getText().toString());
         userProfile.setLastName(mLastName.getText().toString());
         userProfile.setGender(mGender.getSelectedItem().toString());
@@ -107,10 +76,15 @@ public class RegisterForm extends AppCompatActivity {
     }
     private void getUserObj()
     {
-        mUser = Parcels.unwrap(getIntent().getParcelableExtra("userObj"));
+        mUser = Parcels.unwrap(getIntent().getExtras().getParcelable("userObj"));
     }
     private void Init()
     {
+        mFirstName = (EditText) findViewById(R.id.etFirstName);
+        mLastName = (EditText) findViewById(R.id.etLastName);
+        mBiography = (EditText) findViewById(R.id.etBio);
+        mInterests = (EditText) findViewById(R.id.etIntrests);
+        mPhoneNum = (EditText) findViewById(R.id.etPhone);
         mCountries = (Spinner) findViewById(R.id.spnrCountries);
         mGender = (Spinner) findViewById(R.id.spnrGender);
         mSaveProfile = (Button) findViewById(R.id.btnSaveProf);
@@ -146,19 +120,16 @@ public class RegisterForm extends AppCompatActivity {
         }
 
     }
-    private void changeUserStatus(final String userName, final boolean status)
-    {
-        //this will change the status of the user
-        mDatabaseReference.child("Users").child(userName.toLowerCase()).addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                mDatabaseReference.child("Users").child(userName.toLowerCase()).child("Active").setValue(status);
-            }
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
 
-            }
-        });
+    private UserProfile dummyMethod()
+    {
+        UserProfile userProfile = new UserProfile();
+        userProfile.setUserName("jamal");
+        userProfile.setBiography("abc");
+        userProfile.setFirstName("Jamal Hussain");
+        userProfile.setLastName("Khattak");
+        userProfile.setEmailAddress("jamal@yahoo.com");
+        return userProfile;
 
     }
 }
