@@ -52,9 +52,11 @@ public class RegisterFragment extends Fragment {
                                 user.setPassword(mPassword.getText().toString());
                                 user.setActive(false);
                                 mDatabaseReference.child("Users").child(user.getUserName()).setValue(user);
-                                Toast.makeText(getContext(),"User has been added",Toast.LENGTH_SHORT).show();
+                                Toast.makeText(getContext(),"User has been addedm use login tab to login",Toast.LENGTH_SHORT).show();
+                                clearFields();
                             }else{
                                 Toast.makeText(getContext(),"Sorry user already  exists",Toast.LENGTH_SHORT).show();
+                                //show possible suggestions
                             }
                         }
 
@@ -124,6 +126,13 @@ public class RegisterFragment extends Fragment {
         Matcher matcher = pattern.matcher(email);
         flag = matcher.matches();
         return flag;
+    }
+    private void clearFields()
+    {
+        mUserName.setText("");
+        mEmail.setText("");
+        mPassword.setText("");
+
     }
 
 

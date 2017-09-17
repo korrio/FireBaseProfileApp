@@ -1,19 +1,30 @@
 package com.example.jamal.firebaseprofileapp;
 
 import android.content.Intent;
+import android.database.Cursor;
+import android.net.Uri;
 import android.os.Bundle;
+import android.provider.OpenableColumns;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.Spinner;
 import android.widget.Toast;
 
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
+import com.squareup.picasso.Picasso;
 
 import org.parceler.Parcels;
 
@@ -27,6 +38,10 @@ public class RegisterForm extends AppCompatActivity {
     private Spinner mGender;
     private Button mSaveProfile;
     private User mUser;
+    private ImageView mUserImage;
+    private int PICK_IMAGE_REQUEST = 1;
+    private UserProfile mUserProfile = new UserProfile();
+    private ProgressBar mImageProgress;
     private DatabaseReference mDatabaseReference = FirebaseDatabase.getInstance().getReference();
 
 
@@ -36,18 +51,19 @@ public class RegisterForm extends AppCompatActivity {
         public void onClick(View view) {
             if(checkFields())
             {
-                Toast.makeText(RegisterForm.this,"working",Toast.LENGTH_SHORT).show();
+                mUserProfile = getUserProfile();
+                Toast.makeText(RegisterForm.this,mUserProfile.toString(),Toast.LENGTH_LONG).show();
                 mDatabaseReference.child("Users").child(mUser.getUserName().toLowerCase()).child("active").setValue(true, new DatabaseReference.CompletionListener() {
                     @Override
                     public void onComplete(DatabaseError databaseError, DatabaseReference databaseReference) {
                         Toast.makeText(RegisterForm.this,"user status has been changed",Toast.LENGTH_SHORT).show();
-                        mDatabaseReference.child("UserProfiles").child(mUser.getUserName().toLowerCase()).setValue(getUserProfile(), new DatabaseReference.CompletionListener() {
+                        mDatabaseReference.child("UserProfiles").child(mUser.getUserName().toLowerCase()).setValue(mUserProfile, new DatabaseReference.CompletionListener() {
                             @Override
                             public void onComplete(DatabaseError databaseError, DatabaseReference databaseReference) {
                                 Toast.makeText(RegisterForm.this,"user profile has been added",Toast.LENGTH_SHORT).show();
                                 Intent userHome = new Intent(RegisterForm.this,UserHome.class);
                                 Bundle bundle =new Bundle();
-                                bundle.putParcelable("userProfile",Parcels.wrap(getUserProfile()));
+                                bundle.putParcelable("userProfile",Parcels.wrap(mUserProfile));
                                 userHome.putExtras(bundle);
                                 startActivity(userHome);
                                 finish();
@@ -66,37 +82,151 @@ public class RegisterForm extends AppCompatActivity {
 
         }
     };
+    private View.OnClickListener mUserImgLstnr = new View.OnClickListener() {
+        @Override
+        public void onClick(View view) {
+            Intent intent = new Intent();
+            // Show only images, no videos or anything else
+            intent.setType("image/*");
+            intent.setAction(Intent.ACTION_GET_CONTENT);
+            // Always show the chooser (if there are multiple options available)
+            startActivityForResult(Intent.createChooser(intent, "Select Picture"), PICK_IMAGE_REQUEST);
 
-    @NonNull
+        }
+    };
+    private void uploadImageToFirebase(Uri uri){
+        Toast.makeText(RegisterForm.this, getFileName(uri), Toast.LENGTH_SHORT).show();
+        Picasso.with(RegisterForm.this).load(uri)
+                .placeholder(R.mipmap.ic_launcher)
+                .error(R.mipmap.ic_launcher).transform(new PicassoCircleTransformation())
+                .into(mUserImage);
+        //uploading image to firebase and retrieving uri to be stored in user profile
+        StorageReference mStorageRef = FirebaseStorage.getInstance().getReference();
+        StorageReference riversRef = mStorageRef.child("profileImages/" + mUser.getUserName()+"_"+getFileName(uri));
+        mImageProgress.setVisibility(View.VISIBLE);
+        riversRef.putFile(uri).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+            @Override
+            public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                @SuppressWarnings("VisibleForTests") Uri downloadUrl = taskSnapshot.getDownloadUrl();
+                Toast.makeText(RegisterForm.this,downloadUrl.toString(),Toast.LENGTH_SHORT).show();
+                mUserProfile.setImageUrl(downloadUrl.toString());
+                mImageProgress.setVisibility(View.GONE);
+                /*mDatabaseReference.child("UserProfiles").child(mUser.getUserName().toLowerCase()).child("ImageUrl").setValue(downloadUrl.toString(), new DatabaseReference.CompletionListener() {
+                    @Override
+                    public void onComplete(DatabaseError databaseError, DatabaseReference databaseReference) {
+                        Toast.makeText(RegisterForm.this,"User profile link saved",Toast.LENGTH_SHORT).show();
+
+                    }
+                });*/
+
+
+
+
+
+            }
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                e.printStackTrace();
+                //Toast.makeText(RegisterForm.this,e.getLocalizedMessage(),Toast.LENGTH_SHORT).show();
+                //set default image for the user
+                mUserProfile.setImageUrl("https://firebasestorage.googleapis.com/v0/b/fir-profileapp.appspot.com/o/profileImages%2Fuser.png?alt=media&token=94b61138-26c4-4e92-9253-ba576bf3151d");
+                mImageProgress.setVisibility(View.GONE);
+
+
+            }
+        });
+
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if(requestCode==PICK_IMAGE_REQUEST&&resultCode==RESULT_OK&&data!=null&&data.getData()!=null) {
+            Uri uri = data.getData();
+            uploadImageToFirebase(uri);
+
+        }
+
+    }
+    public String getFileName(Uri uri) {
+        String result = null;
+        if (uri.getScheme().equals("content")) {
+            Cursor cursor = getContentResolver().query(uri, null, null, null, null);
+            try {
+                if (cursor != null && cursor.moveToFirst()) {
+                    result = cursor.getString(cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME));
+                }
+            } finally {
+                cursor.close();
+            }
+        }
+        if (result == null) {
+            result = uri.getPath();
+            int cut = result.lastIndexOf('/');
+            if (cut != -1) {
+                result = result.substring(cut + 1);
+            }
+        }
+        return result;
+    }
+
     private UserProfile getUserProfile() {
-        UserProfile userProfile = new UserProfile();
-        userProfile.setUserName(mUser.getUserName());
-        userProfile.setActive(true);
-        userProfile.setFirstName(mFirstName.getText().toString());
-        userProfile.setLastName(mLastName.getText().toString());
-        userProfile.setGender(mGender.getSelectedItem().toString());
-        userProfile.setCountry(mCountries.getSelectedItem().toString());
-        userProfile.setBiography(mBiography.getText().toString());
-        userProfile.setInterests(mInterests.getText().toString());
-        userProfile.setPhoneNu(mPhoneNum.getText().toString());
-        userProfile.setImageUrl("url to image");
-        userProfile.setEmailAddress(mUser.getEmailAddress());
-        return userProfile;
+        mUserProfile.setUserName(mUser.getUserName());
+        mUserProfile.setActive(true);
+        mUserProfile.setFirstName(mFirstName.getText().toString());
+        mUserProfile.setLastName(mLastName.getText().toString());
+        mUserProfile.setGender(mGender.getSelectedItem().toString());
+        mUserProfile.setCountry(mCountries.getSelectedItem().toString());
+        mUserProfile.setBiography(mBiography.getText().toString());
+        mUserProfile.setInterests(mInterests.getText().toString());
+        mUserProfile.setPhoneNu(mPhoneNum.getText().toString());
+        mUserProfile.setEmailAddress(mUser.getEmailAddress());
+        if(mUserProfile.getImageUrl()==null)
+        {
+            mUserProfile.setImageUrl("https://firebasestorage.googleapis.com/v0/b/fir-profileapp.appspot.com/o/profileImages%2Fuser.png?alt=media&token=94b61138-26c4-4e92-9253-ba576bf3151d");
+        }
+        return mUserProfile;
     }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_register_form);
-        getUserObj();
         Init();
         InitListeners();
         InitSpinner();
+        getUserObj();
 
     }
     private void getUserObj()
     {
         mUser = Parcels.unwrap(getIntent().getExtras().getParcelable("userObj"));
+
+        if(getIntent().getExtras().containsKey("isEdit"))
+        {
+            boolean isEdit = getIntent().getExtras().getBoolean("isEdit");
+            if(isEdit)
+            {
+                mUserProfile = Parcels.unwrap(getIntent().getExtras().getParcelable("userProfileEdit"));
+                displayForm();
+            }
+
+        }else{
+            mUserProfile = new UserProfile();
+        }
+    }
+    private void displayForm()
+    {
+        mFirstName.setText(mUserProfile.getFirstName());
+        mLastName.setText(mUserProfile.getLastName());
+        mBiography.setText(mUserProfile.getBiography());
+        mInterests.setText(mUserProfile.getInterests());
+        mPhoneNum.setText(mUserProfile.getPhoneNu());
+        Picasso.with(RegisterForm.this).load(mUserProfile.getImageUrl())
+                .placeholder(R.mipmap.ic_launcher)
+                .error(R.mipmap.ic_launcher).transform(new PicassoCircleTransformation())
+                .into(mUserImage);
     }
     private void Init()
     {
@@ -108,11 +238,14 @@ public class RegisterForm extends AppCompatActivity {
         mCountries = (Spinner) findViewById(R.id.spnrCountries);
         mGender = (Spinner) findViewById(R.id.spnrGender);
         mSaveProfile = (Button) findViewById(R.id.btnSaveProf);
+        mUserImage = (ImageView) findViewById(R.id.imgUserImg);
+        mImageProgress = (ProgressBar) findViewById(R.id.prgImgUpload);
 
     }
     private void InitListeners()
     {
         mSaveProfile.setOnClickListener(mSaveProfList);
+        mUserImage.setOnClickListener(mUserImgLstnr);
     }
 
     private void InitSpinner()

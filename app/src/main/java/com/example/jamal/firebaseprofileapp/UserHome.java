@@ -18,7 +18,11 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.squareup.picasso.Picasso;
+
 import org.parceler.Parcels;
+
+import java.io.File;
 
 public class UserHome extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
@@ -27,6 +31,8 @@ public class UserHome extends AppCompatActivity
     private ImageView mProfileImage;
     private NavigationView mNavigationView;
     private UserProfile mUserProfile;
+    public static final String MY_PREFS_NAME = "UserInformation";
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,7 +42,7 @@ public class UserHome extends AppCompatActivity
         toolbar.setTitle("User Home Screen");
         setSupportActionBar(toolbar);
         init();
-
+        saveUserLocally();
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
                 this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
@@ -45,6 +51,7 @@ public class UserHome extends AppCompatActivity
 
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
+
     }
 
     @Override
@@ -96,8 +103,29 @@ public class UserHome extends AppCompatActivity
 
         if (id == R.id.navEditProfile) {
             Toast.makeText(UserHome.this,"User profile will be edited here",Toast.LENGTH_SHORT).show();
+            User userObj = new User();
+            userObj.setUserName(mUserProfile.getUserName());
+            userObj.setEmailAddress(mUserProfile.getEmailAddress());
+            Intent registerForm = new Intent(UserHome.this,RegisterForm.class);
+            Bundle bundle = new Bundle();
+            bundle.putParcelable("userObj",Parcels.wrap(userObj));
+            bundle.putParcelable("userProfileEdit",Parcels.wrap(mUserProfile));
+            bundle.putBoolean("isEdit",true);
+            registerForm.putExtras(bundle);
+            startActivity(registerForm);
         } else if (id == R.id.navLogout) {
-            Toast.makeText(UserHome.this, "You will be redirected back to login screen", Toast.LENGTH_SHORT).show();
+            File preferenceFile = new File(
+                    "/data/data/"+getPackageName()+"/shared_prefs/"+MY_PREFS_NAME+".xml");
+            if(preferenceFile.exists())
+            {
+                if(preferenceFile.delete())
+                {
+                    Toast.makeText(UserHome.this, "You will be redirected back to login screen", Toast.LENGTH_SHORT).show();
+                    Intent loginScreen = new Intent(UserHome.this,MainActivity.class);
+                    startActivity(loginScreen);
+                }
+            }
+
         }
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -118,6 +146,21 @@ public class UserHome extends AppCompatActivity
             Toast.makeText(UserHome.this,"Bug reports are enabled for this application",Toast.LENGTH_SHORT).show();
         }
     }
+    private void saveUserLocally()
+    {
+        SharedPreferences.Editor editor = getSharedPreferences(MY_PREFS_NAME,MODE_PRIVATE).edit();
+        editor.putString("UserName",mUserProfile.getUserName());
+        editor.putString("FirstName",mUserProfile.getFirstName());
+        editor.putString("LastName",mUserProfile.getLastName());
+        editor.putString("Biography", mUserProfile.getBiography());
+        editor.putString("EmailAddress",mUserProfile.getEmailAddress());
+        editor.putString("ImageUrl",mUserProfile.getImageUrl());
+        editor.putString("Interests",mUserProfile.getInterests());
+        editor.putString("Country",mUserProfile.getCountry());
+        editor.putString("Gender",mUserProfile.getGender());
+        editor.putString("PhonNu",mUserProfile.getPhoneNu());
+        editor.apply();
+    }
     private void init()
     {
         mNavigationView = (NavigationView) findViewById(R.id.nav_view);
@@ -125,10 +168,40 @@ public class UserHome extends AppCompatActivity
         mUserFullName = hView.findViewById(R.id.txtFullName);
         mUserEmailAddrs = hView.findViewById(R.id.txtEmailAddrs);
         mProfileImage = hView.findViewById(R.id.imgProf);
-        mUserProfile = Parcels.unwrap(getIntent().getExtras().getParcelable("userProfile"));
-        Log.d("UserHome", "init: "+Parcels.unwrap(getIntent().getExtras().getParcelable("userProfile")).toString());
-        mUserFullName.setText(mUserProfile.getFirstName()+" "+mUserProfile.getLastName());
-        mUserEmailAddrs.setText(mUserProfile.getEmailAddress());
-            //profile image will be set later
+        if(getIntent().getExtras()!=null)
+        {
+            if(getIntent().getExtras().containsKey("userProfile")){
+                mUserProfile = Parcels.unwrap(getIntent().getExtras().getParcelable("userProfile"));
+                Log.d("UserHome", "init: "+Parcels.unwrap(getIntent().getExtras().getParcelable("userProfile")).toString());
+                mUserFullName.setText(mUserProfile.getFirstName()+" "+mUserProfile.getLastName());
+                mUserEmailAddrs.setText(mUserProfile.getEmailAddress());
+                Picasso.with(UserHome.this).load(mUserProfile.getImageUrl())
+                        .placeholder(R.mipmap.ic_launcher)
+                        .error(R.mipmap.ic_launcher).transform(new PicassoCircleTransformation())
+                        .into(mProfileImage);
+            }
+        }else{
+            SharedPreferences editor = getSharedPreferences(MY_PREFS_NAME,MODE_PRIVATE);
+            mUserProfile = new UserProfile();
+            mUserProfile.setUserName(editor.getString("UserName",""));
+            mUserProfile.setFirstName(editor.getString("FirstName",""));
+            mUserProfile.setLastName(editor.getString("LastName",""));
+            mUserProfile.setBiography(editor.getString("Biography", ""));
+            mUserProfile.setEmailAddress(editor.getString("EmailAddress",""));
+            mUserProfile.setImageUrl(editor.getString("ImageUrl",""));
+            mUserProfile.setInterests(editor.getString("Interests",""));
+            mUserProfile.setCountry(editor.getString("Country",""));
+            mUserProfile.setGender(editor.getString("Gender",""));
+            mUserProfile.setPhoneNu(editor.getString("PhonNu",""));
+            mUserFullName.setText(mUserProfile.getFirstName()+" "+mUserProfile.getLastName());
+            mUserEmailAddrs.setText(mUserProfile.getEmailAddress());
+            Picasso.with(UserHome.this).load(mUserProfile.getImageUrl())
+                    .placeholder(R.mipmap.ic_launcher)
+                    .error(R.mipmap.ic_launcher).transform(new PicassoCircleTransformation())
+                    .into(mProfileImage);
+
+        }
+
+
     }
 }

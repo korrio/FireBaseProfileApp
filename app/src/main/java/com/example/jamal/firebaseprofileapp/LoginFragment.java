@@ -56,6 +56,7 @@ public class LoginFragment extends Fragment {
                                     Bundle bundle = new Bundle();
                                     bundle.putParcelable("userProfile",wrapped);
                                     userHome.putExtras(bundle);
+                                    clearFields();
                                     startActivity(userHome);
 
                                 }else{
@@ -134,5 +135,10 @@ public class LoginFragment extends Fragment {
             return true;
         }
 
+    }
+    private void clearFields()
+    {
+        mUserName.setText("");
+        mPassword.setText("");
     }
 }
