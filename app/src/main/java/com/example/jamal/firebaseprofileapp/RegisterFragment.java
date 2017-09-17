@@ -39,7 +39,7 @@ public class RegisterFragment extends Fragment {
                 {
                     Toast.makeText(getContext(),"Email and everything is correct",Toast.LENGTH_SHORT).show();
 
-                    mDatabaseReference.addValueEventListener(new ValueEventListener() {
+                    mDatabaseReference.addListenerForSingleValueEvent(new ValueEventListener() {
                         @Override
                         public void onDataChange(DataSnapshot dataSnapshot) {
                             Log.d("RegisterFrag", "onDataChange: "+dataSnapshot.child("Users").hasChild(mUserName.getText().toString().toLowerCase()));
