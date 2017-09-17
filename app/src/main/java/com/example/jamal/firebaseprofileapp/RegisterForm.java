@@ -1,5 +1,6 @@
 package com.example.jamal.firebaseprofileapp;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
@@ -35,15 +36,33 @@ public class RegisterForm extends AppCompatActivity {
         public void onClick(View view) {
             if(checkFields())
             {
+                Toast.makeText(RegisterForm.this,"working",Toast.LENGTH_SHORT).show();
                 mDatabaseReference.child("Users").child(mUser.getUserName().toLowerCase()).child("active").setValue(true, new DatabaseReference.CompletionListener() {
                     @Override
                     public void onComplete(DatabaseError databaseError, DatabaseReference databaseReference) {
-                        Toast.makeText(RegisterForm.this,"Da moor agha kuss di",Toast.LENGTH_SHORT).show();
+                        Toast.makeText(RegisterForm.this,"user status has been changed",Toast.LENGTH_SHORT).show();
+                        mDatabaseReference.child("UserProfiles").child(mUser.getUserName().toLowerCase()).setValue(getUserProfile(), new DatabaseReference.CompletionListener() {
+                            @Override
+                            public void onComplete(DatabaseError databaseError, DatabaseReference databaseReference) {
+                                Toast.makeText(RegisterForm.this,"user profile has been added",Toast.LENGTH_SHORT).show();
+                                Intent userHome = new Intent(RegisterForm.this,UserHome.class);
+                                Bundle bundle =new Bundle();
+                                bundle.putParcelable("userProfile",Parcels.wrap(getUserProfile()));
+                                userHome.putExtras(bundle);
+                                startActivity(userHome);
+                                finish();
+
+
+                            }
+                        });
+
 
                     }
                 });
 
+
             }
+
 
         }
     };
@@ -73,6 +92,7 @@ public class RegisterForm extends AppCompatActivity {
         Init();
         InitListeners();
         InitSpinner();
+
     }
     private void getUserObj()
     {

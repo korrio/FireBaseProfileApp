@@ -5,7 +5,6 @@ import android.os.Bundle;
 import android.os.Parcelable;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -37,14 +36,12 @@ public class LoginFragment extends Fragment {
         public void onClick(View view) {
             if(checkFields())
             {
-                mDatabaseReference.addValueEventListener(new ValueEventListener() {
+                mDatabaseReference.addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
                     public void onDataChange(DataSnapshot dataSnapshot) {
-                        Log.d("RegisterFrag", "onDataChange: "+dataSnapshot.child("Users").hasChild(mUserName.getText().toString().toLowerCase()));
                         if(dataSnapshot.child("Users").hasChild(mUserName.getText().toString().toLowerCase()))
                         {
-                            User user = dataSnapshot.child("Users").child(mUserName.getText().toString().toLowerCase()).getValue(User.class);
-                            Toast.makeText(getContext(),user.toString(),Toast.LENGTH_SHORT).show();
+                            final User user = dataSnapshot.child("Users").child(mUserName.getText().toString().toLowerCase()).getValue(User.class);
                             if(user.getUserName().toLowerCase().equals(mUserName.getText().toString().toLowerCase())&&user.getPassword().toLowerCase().equals(mPassword.getText().toString().toLowerCase())){
                                 Toast.makeText(getContext(),"Username and password are okay",Toast.LENGTH_SHORT).show();
                                 //now check if the active status is true or false
@@ -52,10 +49,15 @@ public class LoginFragment extends Fragment {
                                 //if the active status is false so redirect to the profile screen so profile is first set up
                                 if(user.isActive())
                                 {
-                                    //redirect to home screen
-                                    //user object will be sent to this class with picture and other details
+                                    UserProfile userProfile = dataSnapshot.child("UserProfiles").child(mUserName.getText().toString()).getValue(UserProfile.class);
+                                    Toast.makeText(getActivity(),userProfile.toString(),Toast.LENGTH_SHORT).show();
+                                    Parcelable wrapped = Parcels.wrap(userProfile);
                                     Intent userHome = new Intent(getContext(),UserHome.class);
+                                    Bundle bundle = new Bundle();
+                                    bundle.putParcelable("userProfile",wrapped);
+                                    userHome.putExtras(bundle);
                                     startActivity(userHome);
+
                                 }else{
                                     //redirect to profile screen
                                     //user object will be sent to the profile screen where it will be used
@@ -66,9 +68,14 @@ public class LoginFragment extends Fragment {
                                     bundle.putParcelable("userObj",wrapped);
                                     registerForm.putExtras(bundle);
                                     startActivity(registerForm);
+                                    /*try {
+                                        finalize();
+                                    } catch (Throwable throwable) {
+                                        throwable.printStackTrace();
+                                    }*/
                                 }
 
-                        }else{
+                            }else{
                                 Toast.makeText(getContext(),"sorry username or password is wrong",Toast.LENGTH_SHORT).show();
 
                             }
